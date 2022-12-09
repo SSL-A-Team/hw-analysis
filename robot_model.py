@@ -21,17 +21,8 @@ print(vel_cmd)
 print(T_f)
 print(vel_wheel)
 
+T_b = np.linalg.pinv(T_f)
 
-T_b = np.matrix([
-    [sin(theta[0]), sin(theta[1]), sin(theta[2]), sin(theta[3])],
-    [cos(theta[0]), cos(theta[1]), cos(theta[2]), cos(theta[3])],
-    [1.0 / l,       1.0 / l,       1.0 / l,       1.0 / l],
-])
+rec_vel_body = T_b * vel_wheel
 
-body_vel_rec = T_b * vel_wheel
-print(body_vel_rec / 4.0)
-# # print(body_vel_rec)
-# body_vel_rec[0] = body_vel_rec[0] * (2.0 / 3.0)
-# body_vel_rec[1] = body_vel_rec[1] * 0.40
-# # body_vel_rec = np.array([body_vel_rec[0][0] * (2.0 / 3.0), body_vel_rec[1][0] * 0.40, body_vel_rec[2]])
-# print(body_vel_rec)
+print(rec_vel_body)
