@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "ateam-hw-analysis"
+version = "0.1.0"
+description = "Software used for the analysis of hardware design"
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "ateam_hw_analysis"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+matplotlib = "^3.6.2"
+scikit-learn = "^1.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
