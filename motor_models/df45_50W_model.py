@@ -30,8 +30,8 @@ b_c2t = round(b_c2t, 5)
 r_value_c2t = round(r_value_c2t, 5)
 
 print("Units: Current (A), Torque (nM)")
-print(f"regression for current to torque: I   = {m_t2c}*tau + {b_t2c}")
-print(f"regression for torque to current: tau = {m_c2t}*I   + {b_c2t}")
+print(f"regression for torque to current: I   = {m_t2c}*tau + {b_t2c}")
+print(f"regression for current to torque: tau = {m_c2t}*I   + {b_c2t}")
 
 
 
