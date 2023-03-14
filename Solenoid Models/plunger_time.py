@@ -1,6 +1,7 @@
 import math
 import femm
 import matplotlib.pyplot as plt
+import csv
 
 METER_TO_IN = 39.3701
 
@@ -68,6 +69,14 @@ femm.closefemm()
 # v_ball = sqrt((m_plunger * v_plunger^2) / m_ball)
 v_ball = 0.7*math.sqrt((m * velocity**2) / 0.0459)
 print(f"Expected ball velocity: {v_ball} m/s")
+
+
+with open('solenoid_sim_output.csv', 'w', newline='') as csvfile:
+    csv_writer = csv.writer(csvfile, delimiter=',')
+    csv_writer.writerow(["Time", "Current", "Force", "Displacement"])
+    for sample_index in range(len(time_samples)):
+        csv_writer.writerow([time_samples[sample_index], current_samples[sample_index], force_samples[sample_index], plunger_displacement_samples[sample_index]])
+
 
 print("Avg. Force:" + repr(sum(force_samples)/len(force_samples)))
 plt.subplot(1,3,1)
