@@ -8,11 +8,18 @@ femm.openfemm()
 femm.opendocument("S-22-150-HF Solenoid Plunger.fem");
 femm.mi_saveas("temp.fem")
 femm.mi_seteditmode("group")
-z=[];
-f=[];
-t=[];
-v_i = 0 # m/s
-v_f = 0 # m/s
+plunger_displacement_samples=[];
+force_samples=[];
+time_samples=[];
+current_samples=[]
+prev_velocity = 0 # m/s
+velocity = 0 # m/s
+
+# Variables for modeling current decay in coil
+initial_voltage = 170  # volts
+coil_resistance = 1.9 # ohms
+kicker_board_capacitance = 0.002 # Farads
+tau = coil_resistance * kicker_board_capacitance
 
 d_total = 0 # m
 a_inst = 0 # m/s^2
@@ -20,6 +27,12 @@ m = 0.061 # kg
 delta_t = 0.0001 # s
 travel_dist = 0.015 # m
 for t_whole in range(0,60):
+
+    # i=− V_0/R *e^(-t/tau)
+    current_inst = (initial_voltage / coil_resistance) * math.exp(-(t_whole*delta_t) / tau)
+    current_samples.append(current_inst)
+    femm.mi_setcurrent("Coil", current_inst)
+
     femm.mi_analyze()
     femm.mi_loadsolution()
     femm.mo_groupselectblock(1)
@@ -28,17 +41,17 @@ for t_whole in range(0,60):
     # f = ma
     a_inst = f_inst / m 
 
-    v_f = v_i + a_inst*delta_t
-    delta_d = (v_i + v_f)/2 * delta_t
+    velocity = prev_velocity + a_inst*delta_t
+    delta_d = (prev_velocity + velocity)/2 * delta_t
     d_total = d_total + delta_d
-    t.append(t_whole*delta_t)
-    z.append(d_total)
-    f.append(f_inst)
+    time_samples.append(t_whole*delta_t)
+    plunger_displacement_samples.append(d_total)
+    force_samples.append(f_inst)
     if (d_total >= travel_dist):
         # Gone to end of stop
         break
     # Next round initial velocity is current final velocity
-    v_i = v_f
+    prev_velocity = velocity
     femm.mi_selectgroup(1)
     femm.mi_movetranslate(0, delta_d*METER_TO_IN) # Inches
 
@@ -48,20 +61,25 @@ femm.closefemm()
 # boot weight: 6g
 # total kicker weight: 61g
 
+# 6.35mm of contact travel w/ ball
 
 # E = m * v^2
 # m_ball * v_ball^2 = m_plunger * v_plunger^2
 # v_ball = sqrt((m_plunger * v_plunger^2) / m_ball)
-v_ball = 0.8*math.sqrt((m * v_f**2) / 0.0459)
+v_ball = 0.7*math.sqrt((m * velocity**2) / 0.0459)
 print(f"Expected ball velocity: {v_ball} m/s")
 
-print("Avg. Force:" + repr(sum(f)/len(f)))
-plt.subplot(1,2,1)
-plt.plot(t,z)
+print("Avg. Force:" + repr(sum(force_samples)/len(force_samples)))
+plt.subplot(1,3,1)
+plt.plot(time_samples,plunger_displacement_samples)
 plt.xlabel('Time, s')
 plt.ylabel('Offset, m')
-plt.subplot(1,2,2)
-plt.plot(t,f)
+plt.subplot(1,3,2)
+plt.plot(time_samples,force_samples)
 plt.xlabel('Time, s')
 plt.ylabel('Force, N')
+plt.subplot(1,3,3)
+plt.plot(time_samples,current_samples)
+plt.xlabel('Time, s')
+plt.ylabel('Current, A')
 plt.show()
