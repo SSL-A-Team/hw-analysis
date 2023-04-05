@@ -11,7 +11,7 @@ MM_PER_IN = 25.4
 robot_weight_kg = 2.5
 robot_wheel_radius_mm = 25
 # seems like 1:1.9 is good for 50W and 1:1.2 for 65W
-# mu=0.7 suggest 1:13 for 50W and 1:1 for 65W
+# mu=0.7 suggest 1:1.3 for 50W and 1:1 for 65W
 robot_gear_ratio = "1:1.3"  # "motor:wheel", does not support more than 2 gears
 
 # motor options
