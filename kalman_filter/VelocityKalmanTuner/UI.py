@@ -192,7 +192,7 @@ class UIMainWindow(QMainWindow):
 
         # Clear Plots
         for ax in self.plot_axs:
-            ax.lines.clear()
+            ax.cla()
 
         # Plot estimated state values
         self.vx_ax.plot(ts, vxs, "-", c="tab:blue")
@@ -200,9 +200,9 @@ class UIMainWindow(QMainWindow):
         self.omega_ax.plot(ts, omegas, "-", c="tab:blue")
 
         # Plot observed state values
-        self.vx_ax.plot(ts, vxs_obs, "-", c="tab:green")
-        self.vy_ax.plot(ts, vys_obs, "-", c="tab:green")
-        self.omega_ax.plot(ts, omegas_obs, "-", c="tab:green")
+        self.vx_ax.plot(ts, vxs_obs, ":", c="tab:red")
+        self.vy_ax.plot(ts, vys_obs, ":", c="tab:red")
+        self.omega_ax.plot(ts, omegas_obs, ":", c="tab:red")
 
         # Rescale axes and recreate legend
         for ax in self.plot_axs:

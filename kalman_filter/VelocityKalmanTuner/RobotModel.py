@@ -35,7 +35,7 @@ class RobotModel:
     def get_H_matrix(self):
         H = np.zeros((self.num_outputs, self.num_states))
         for i, angle in enumerate(self.wheel_angles):
-            H[i, :] = np.array([-np.sin(angle), np.cos(angle), self.wheel_dist])
+            H[i, :] = np.array([np.sin(angle), np.cos(angle), self.wheel_dist])
 
         H /= -self.wheel_radius
         H[4, :] = np.array([0, 0, 1])

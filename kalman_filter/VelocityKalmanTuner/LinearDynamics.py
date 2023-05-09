@@ -30,10 +30,10 @@ class LinearDynamics(Dynamics):
         self.dt = dt
 
     def process_noise(self, Q):
-        return np.random.multivariate_normal(mean=np.zeros_like(self.x), cov=Q)
+        return np.random.default_rng().multivariate_normal(mean=np.zeros_like(self.x).ravel(), cov=Q).reshape(self.x.shape)
 
     def measurement_noise(self, R):
-        return np.random.multivariate_normal(mean=np.zeros_like(self.y), cov=R)
+        return np.random.default_rng().multivariate_normal(mean=np.zeros_like(self.y).ravel(), cov=R).reshape(self.y.shape)
 
     def step(self, x, u, Q, R):
         """
