@@ -21,12 +21,24 @@ class KF(Observer):
     """
 
     def __init__(self, x_hat_init, A, B, H, D, P, Q, R, dt=0.01):
-        self.P_init = P
+        self.step_response = False
+        self.t = 0
         self.dt = dt
+        
+        self.x_hat_init = x_hat_init
+        self.x_hat = x_hat_init
+        self.x = x_hat_init
+        self.y_tilde = 0
+        self.P_init = P
 
         A_k, B_k, H_k, D_k, _ = scipy.signal.cont2discrete(
             system=(A, B, H, D), dt=self.dt
         )
+
+        self.dynamics = LinearDynamics(A_k, B_k, H_k, D_k, x_init=x_hat_init, dt=dt)
+        self.num_states = self.dynamics.gains.A_k.shape[1]
+        self.num_inputs = self.dynamics.gains.B_k.shape[1]
+        self.num_outputs = self.dynamics.gains.H_k.shape[0]
 
         # https://en.wikipedia.org/wiki/Discretization
         # Q_k = np.round(integrate.quad_vec(lambda tau: scipy.linalg.expm(A * tau) @ Q @ scipy.linalg.expm(A.T * tau), 0, dt)[0],10)
@@ -34,18 +46,7 @@ class KF(Observer):
         Q_k = Q
         R_k = R
 
-        self.dynamics = LinearDynamics(A_k, B_k, H_k, D_k, x_init=x_hat_init, dt=dt)
-        self.gains = KalmanFilterGains(H_k, P, Q_k, R_k)
-        self.num_states = self.dynamics.gains.A_k.shape[1]
-        self.num_inputs = self.dynamics.gains.B_k.shape[1]
-        self.num_outputs = self.dynamics.gains.H_k.shape[0]
-        self.x_hat_init = x_hat_init
-        self.x_hat = x_hat_init
-        self.x = x_hat_init
-        self.t = 0
-        self.dt = dt
-
-        self.step_response = False
+        self.gains = KalmanFilterGains(H_k=H_k, P=P, Q_k=Q_k, R_k=R_k)
 
     def predict(self):
         self.t += self.dt
@@ -54,12 +55,12 @@ class KF(Observer):
         u = self.generate_u()
 
         # A priori state estimate
-        # x_hat' = A * x_hat_prev + B * u
+        # x_hat_{k|(k-1)} = A * x_{(k-1)|(k-1)} + B * u
         self.dynamics.step(x=self.x_hat, u=u, Q=self.gains.Q_k, R=self.gains.R_k)
         self.x_hat = self.dynamics.get_state()
 
         # A priori covariance estimate
-        # P' = A * P_prev * A.T + Q
+        # P_hat{k|k-1} = A * P_{k-1|k-1} * A.T + Q
         self.gains.P = (
             self.dynamics.gains.A_k @ self.gains.P @ self.dynamics.gains.A_k.T
             + self.gains.Q_k
@@ -69,22 +70,21 @@ class KF(Observer):
         return np.zeros((self.dynamics.gains.B_k.shape[1], 1))
 
     def update(self):
-        # Prefit
-        # y = z - H * x_hat
-        y = 0
+        # Innovation / Prefit
+        # y~_k = z_k - H_k * x_hat_(k-1)
         if not self.step_response:
-            y = self.dynamics.get_measurements() - self.gains.H_k @ self.x_hat
+            self.y_tilde = self.dynamics.get_measurements() - self.gains.H_k @ self.x_hat
         else:
             a = 1
             self.x = np.heaviside((self.t - a) * np.ones((self.num_states, 1)), a)
             v = self.gains.R_k @ np.random.randn(self.num_outputs, 1)
-            y = self.gains.H_k @ self.x + v - self.gains.H_k @ self.x_hat
+            self.y_tilde = self.gains.H_k @ self.x + v - self.gains.H_k @ self.x_hat
 
         self.gains.update_K()
 
         # A posteriori state estimate
-        # x_hat = x_hat' + K * (y - H * x_hat_est)
-        self.x_hat += self.gains.K @ y
+        # x_hat_k|k = x_hat_k|(k-1) + K * (y~_k)
+        self.x_hat = self.x_hat + self.gains.K @ self.y_tilde
 
         # A posteriori covariance estimate
         # P = (I - K * H) * P'
@@ -93,8 +93,8 @@ class KF(Observer):
         ) @ self.gains.P
 
         # Postfit
-        # y = z - H * x_hat
-        y = self.dynamics.get_measurements() - self.gains.H_k @ self.x_hat
+        # y~_k = z - H * x_hat_k|k
+        self.y_tilde = self.dynamics.get_measurements() - self.gains.H_k @ self.x_hat
 
     def step(self):
         self.predict()

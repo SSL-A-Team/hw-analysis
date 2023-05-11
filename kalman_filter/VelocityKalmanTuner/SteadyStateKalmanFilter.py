@@ -21,12 +21,15 @@ class SS_KF(Observer):
     """
 
     def __init__(self, x_hat_init, A, B, H, D, Q, R, dt=0.01):
+        self.step_response = False
         self.t = 0
         self.dt = dt
 
         self.x_hat_init = x_hat_init
         self.x_hat = x_hat_init
         self.x = x_hat_init
+        self.y_tilde = 0
+
 
         A_k, B_k, H_k, D_k, _ = scipy.signal.cont2discrete(
             system=(A, B, H, D), dt=self.dt
@@ -42,20 +45,21 @@ class SS_KF(Observer):
         Q_k = Q
         R_k = R
 
+        # Solves P for steady state
         P_ss = scipy.linalg.solve_discrete_are(
             self.dynamics.gains.A_k.T, self.dynamics.gains.H_k.T, Q_k, R_k
         )
 
         self.gains = KalmanFilterGains(H_k=H_k, P=P_ss, Q_k=Q_k, R_k=R_k)
-        self.step_response = False
 
     def predict(self):
         self.t += self.dt
+
         # Control input, returns 0 for now
         u = self.generate_u()
 
         # A priori state estimate
-        # x_hat' = A * x_hat_prev + B * u
+        # x_hat_{k|(k-1)} = A * x_{(k-1)|(k-1)} + B * u
         self.dynamics.step(x=self.x_hat, u=u, Q=self.gains.Q_k, R=self.gains.R_k)
         self.x_hat = self.dynamics.get_state()
 
@@ -63,23 +67,22 @@ class SS_KF(Observer):
         return np.zeros((self.dynamics.gains.B_k.shape[1], 1))
 
     def update(self):
-        # Prefit
-        # y = z - H * x_hat
-        y = 0
+        # Innovation / Prefit
+        # y~_{k} = z_{k} - H_{k} * x_hat_{k-1}
         if not self.step_response:
-            y = self.dynamics.get_measurements() - self.gains.H_k @ self.x_hat
+            self.y_tilde = self.dynamics.get_measurements() - self.gains.H_k @ self.x_hat
         else:
             a = 1
             self.x = np.heaviside((self.t - a) * np.ones((self.num_states, 1)), a)
             v = self.gains.R_k @ np.random.randn(self.num_outputs, 1)
-            y = self.gains.H_k @ self.x - self.gains.H_k @ self.x_hat
+            self.y_tilde = self.gains.H_k @ self.x - self.gains.H_k @ self.x_hat
         # A posteriori state estimate
-        # x_hat = x_hat' + K * (y - H * x_hat_est)
-        self.x_hat += self.gains.K @ y
+        # x_hat_k = x_hat_(k-1) + K * (y~_k)
+        self.x_hat = self.x_hat + self.gains.K @ self.y_tilde
 
         # Postfit
-        # y = z - H * x_hat
-        y = self.dynamics.get_measurements() - self.gains.H_k @ self.x_hat
+        # y~_k = z - H * x_hat_k|k
+        self.y_tilde = self.dynamics.get_measurements() - self.gains.H_k @ self.x_hat
 
     def get_state_estimate(self):
         return self.x_hat
