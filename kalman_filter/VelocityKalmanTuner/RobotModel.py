@@ -14,10 +14,18 @@ class RobotModel:
         self.wheel_radius = 0.0245
 
         # Noises
-        self.init_covariance = 0.1
+        self.init_variance = 0.1 # Diagonal of P matrix is variance at the start of the filter running, which should be small at start
+        # Assume initial covariance between sensors is zero
         self.process_noise = 0.05
-        self.encoder_noise = 0.118
-        self.gyro_noise = 0.00244
+        encoder_noise_rads = np.radians(0.068) # rads for AS5047P encoder RMS output noise (1 sigma)
+        encoder_sampling_period = 0.01 # s
+        self.encoder_noise = encoder_noise_rads/(1/encoder_sampling_period)
+
+        gryo_noise_noise_density = 0.014  # deg/s/√Hz for BMI085 Noise density (typ.)
+        # TODO find maximum rotation speed
+        # 
+        gyro_sampling_freq = 100 # Hz TODO data rate reporting tolerance 
+        self.gyro_noise = np.radians(gryo_noise_noise_density) * np.sqrt(gyro_sampling_freq) # in rad/s
 
         # Dimensions:
         self.num_states = 3
@@ -30,14 +38,14 @@ class RobotModel:
 
     def get_B_matrix(self):
         B = np.zeros((self.num_states, self.num_inputs))
+        T_robot_to_wheel = self.get_T_robot_to_wheel()
+        # Jacobian is the pseudo-inverse aka T_wheel_to_robot for inverse kinematics
+        B = np.linalg.pinv(T_robot_to_wheel)
         return B
 
     def get_H_matrix(self):
         H = np.zeros((self.num_outputs, self.num_states))
-        for i, angle in enumerate(self.wheel_angles):
-            H[i, :] = np.array([np.sin(angle), np.cos(angle), self.wheel_dist])
-
-        H /= -self.wheel_radius
+        H[0:4,:] = self.get_T_robot_to_wheel()
         H[4, :] = np.array([0, 0, 1])
         return H
 
@@ -46,7 +54,7 @@ class RobotModel:
         return D
 
     def get_P_init_matrix(self):
-        P = np.eye(self.num_states) * self.init_covariance
+        P = np.eye(self.num_states) * self.init_variance
         return P
 
     def get_Q_matrix(self):
@@ -69,3 +77,17 @@ class RobotModel:
             "Q": self.get_Q_matrix(),
             "R": self.get_R_matrix(),
         }
+
+
+    def get_T_robot_to_wheel(self):
+        #       ^   Vx
+        #       |
+        # Vy <--- 
+        #
+        # https://www.mdpi.com/2076-3417/12/12/5798 with pi/2 rotation on the forward kinematics 
+        T_robot_to_wheel = np.zeros((self.num_inputs, self.num_states))
+        for i, angle in enumerate(self.wheel_angles):
+           T_robot_to_wheel[i, :] = np.array([-np.sin(angle), np.cos(angle), self.wheel_dist])
+        T_robot_to_wheel /= -self.wheel_radius  
+
+        return T_robot_to_wheel
