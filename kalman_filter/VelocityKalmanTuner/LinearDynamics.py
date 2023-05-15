@@ -28,12 +28,14 @@ class LinearDynamics(Dynamics):
         self.x_init = x_init
         self.reset()
         self.dt = dt
+        self.rng = np.random.default_rng(0)
+
 
     def process_noise(self, Q):
-        return np.random.default_rng().multivariate_normal(mean=np.zeros_like(self.x).ravel(), cov=Q).reshape(self.x.shape)
+        return self.rng.multivariate_normal(mean=np.zeros_like(self.x).ravel(), cov=Q).reshape(self.x.shape)
 
     def measurement_noise(self, R):
-        return np.random.default_rng().multivariate_normal(mean=np.zeros_like(self.y).ravel(), cov=R).reshape(self.y.shape)
+        return self.rng.multivariate_normal(mean=np.zeros_like(self.y).ravel(), cov=R).reshape(self.y.shape)
 
     def step(self, x, u, Q, R):
         """
@@ -52,3 +54,6 @@ class LinearDynamics(Dynamics):
     def reset(self):
         self.x = self.x_init
         self.y = self.gains.H_k @ self.x
+
+    def set_seed(self, seed):
+        self.rng = np.random.default_rng(seed)

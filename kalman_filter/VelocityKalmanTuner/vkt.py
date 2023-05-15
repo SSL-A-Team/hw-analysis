@@ -20,13 +20,13 @@ https://en.wikipedia.org/wiki/Kalman_filter
 
 
 class Main(QApplication):
-    def __init__(self, args, model, verbose=False):
+    def __init__(self, args, verbose=False):
         super(Main, self).__init__([])
         self.args = args
-        self.model = model
+        self.model = RobotModel()
         self.observer_type = "SS_KF"
 
-        A, B, H, D, P, Q, R = model.generate_model().values()
+        A, B, H, D, P, Q, R = self.model.generate_model().values()
         self.kalmanFilter = KF(
             x_hat_init=np.zeros((3, 1)), A=A, B=B, H=H, D=D, P=P, Q=Q, R=R
         )
@@ -237,7 +237,13 @@ class Main(QApplication):
     def simulate(self):
         if not self.args.headless:
             self.window.console.clear()
-            err = False
+            # Assign random seed
+            try:
+                self.observer.dynamics.set_seed(int(self.window.seed_box_textbox.text()))
+            except Exception:
+                print("Make sure seed is valid")
+                return 
+            
             # Validate gains
             for row in range(self.model.num_states):
                 for col in range(self.model.num_states):
@@ -246,7 +252,6 @@ class Main(QApplication):
                             self.window.Q_textboxes[row][col].text()
                         )
                     except Exception:
-                        err = True
                         self.console_print(
                             "Make sure that element {},{} of the Q gains matrix is a valid number!".format(
                                 row, col
@@ -257,6 +262,7 @@ class Main(QApplication):
                                 row, col
                             )
                         )
+                        return
 
             for row in range(self.model.num_outputs):
                 for col in range(self.model.num_outputs):
@@ -265,7 +271,6 @@ class Main(QApplication):
                             self.window.R_textboxes[row][col].text()
                         )
                     except Exception:
-                        err = True
                         self.console_print(
                             "Make sure that element {},{} of the R gains matrix is a valid number!".format(
                                 row, col
@@ -276,9 +281,7 @@ class Main(QApplication):
                                 row, col
                             )
                         )
-
-            if err:
-                return
+                        return
 
         for var_list in self.lists:
             var_list.clear()
@@ -487,6 +490,5 @@ if __name__ == "__main__":
     )
     args = p.parse_args()
 
-    model = RobotModel()
-    app = Main(args, model=model, verbose=True)
+    app = Main(args, verbose=True)
     sys.exit(app.exec_())

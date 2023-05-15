@@ -123,6 +123,18 @@ class UIMainWindow(QMainWindow):
         self.settings_box_layout.addWidget(self.data_type_box)
         self.settings_box.setFlat(True)
 
+        # Random seed
+        self.seed_box = QGroupBox(self.central_widget)
+        self.seed_box_layout = QHBoxLayout(self.seed_box)
+        self.seed_box_label = QLabel("Seed: ")
+        self.seed_box_textbox = QLineEdit(self.central_widget)
+        self.seed_box_textbox.setText("1234")
+        self.seed_box_layout.addWidget(self.seed_box_label)
+        self.seed_box_layout.addWidget(self.seed_box_textbox)
+        self.seed_box.setFlat(True)
+
+
+
         # Make 3 x 3 grid of textboxes for Q gains
         self.Q_box = QGroupBox(self.central_widget)
         self.Q_box_layout = QGridLayout(self.Q_box)
@@ -166,6 +178,7 @@ class UIMainWindow(QMainWindow):
         self.right_box_layout.addWidget(self.console_box)
         self.right_box_layout.addWidget(self.filter_type_box)
         self.right_box_layout.addWidget(self.data_type_box)
+        self.right_box_layout.addWidget(self.seed_box)
         self.right_box_layout.addWidget(self.Q_box)
         self.right_box_layout.addWidget(self.R_box)
         self.right_box_layout.addWidget(self.buttons_box)
