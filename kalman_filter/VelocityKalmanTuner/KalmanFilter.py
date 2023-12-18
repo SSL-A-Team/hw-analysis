@@ -48,11 +48,8 @@ class KF(Observer):
 
         self.gains = KalmanFilterGains(H_k=H_k, P=P, Q_k=Q_k, R_k=R_k)
 
-    def predict(self):
+    def predict(self, u):
         self.t += self.dt
-
-        # Control input, returns 0 for now
-        u = self.generate_u()
 
         # A priori state estimate
         # x_hat_{k|(k-1)} = A * x_{(k-1)|(k-1)} + B * u
@@ -60,14 +57,11 @@ class KF(Observer):
         self.x_hat = self.dynamics.get_state()
 
         # A priori covariance estimate
-        # P_hat{k|k-1} = A * P_{k-1|k-1} * A.T + Q
+        # P_hat{k|k-1} = A * P_{k-1|k-1} * A^T + Q
         self.gains.P = (
             self.dynamics.gains.A_k @ self.gains.P @ self.dynamics.gains.A_k.T
             + self.gains.Q_k
         )
-
-    def generate_u(self):
-        return np.zeros((self.dynamics.gains.B_k.shape[1], 1))
 
     def update(self):
         # Innovation / Prefit
@@ -96,8 +90,8 @@ class KF(Observer):
         # y~_k = z - H * x_hat_k|k
         self.y_tilde = self.dynamics.get_measurements() - self.gains.H_k @ self.x_hat
 
-    def step(self):
-        self.predict()
+    def step(self, u):
+        self.predict(u)
         self.update()
         if not self.step_response:
             return self.t, self.get_state_estimate(), self.dynamics.get_state()

@@ -7,11 +7,13 @@ class RobotModel:
     """
 
     def __init__(self):
-        # wheel_angles, wheel_dist, & wheel_radius can all be found in robot_model.hpp
-        #self.wheel_angles = np.deg2rad([180 - 30, 180 + 39, 360 - 39, 0 + 30])
-        self.wheel_angles = np.deg2rad([30, 150, 225, 315])
-        self.wheel_dist = 0.085
-        self.wheel_radius = 0.0245
+        # FL, BL, BR, FR with X positive
+        self.wheel_angles = np.deg2rad([60, 135, 225, 300])
+        # The distance to the origin is different for front and back wheels
+        front_dist = 0.0798
+        back_dist = 0.0837
+        self.wheel_dist = np.array([front_dist, back_dist, back_dist, front_dist])
+        self.wheel_radius = 0.0247
 
         # Noises
         self.init_variance = 0.1 # Diagonal of P matrix is variance at the start of the filter running, which should be small at start
@@ -78,16 +80,15 @@ class RobotModel:
             "R": self.get_R_matrix(),
         }
 
-
     def get_T_robot_to_wheel(self):
         #       ^   Vx
         #       |
         # Vy <--- 
         #
-        # https://www.mdpi.com/2076-3417/12/12/5798 with pi/2 rotation on the forward kinematics 
+        # https://www.mdpi.com/2076-3417/12/12/5798
         T_robot_to_wheel = np.zeros((self.num_inputs, self.num_states))
         for i, angle in enumerate(self.wheel_angles):
-           T_robot_to_wheel[i, :] = np.array([-np.sin(angle), np.cos(angle), self.wheel_dist])
-        T_robot_to_wheel /= -self.wheel_radius  
+           T_robot_to_wheel[i, :] = np.array([np.cos(angle), np.sin(angle), self.wheel_dist[i]])
+        T_robot_to_wheel /= -self.wheel_radius
 
         return T_robot_to_wheel
