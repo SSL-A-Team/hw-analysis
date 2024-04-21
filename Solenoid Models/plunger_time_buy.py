@@ -19,7 +19,7 @@ solenoid_info = [
 ["S-22-150-H", 38.1,  15.7988,  55.626,37.052,  14.05,   0.0043999999999999985, 21, 1.9 , 518.1818182],
 ["S-29-150-H", 38.1,  15.7988,  72.39, 49.625,  14.052,  0.0035999999999999977, 21, 2.6 , 712.9032258]]
 
-initial_voltage = 170  # volts
+initial_voltage = 182  # volts
 kicker_board_capacitance = 0.002 # Farads
 golf_ball_restitution = 0.7
 plunger_margin = 0.99 # % of inner diameter
@@ -44,6 +44,8 @@ for solenoid in solenoid_info:
     awg = str(solenoid[7]) + " AWG"
     coil_resistance = solenoid[8]
     turns = solenoid[9]
+
+    print(name)
 
     # Coil generation
     femm.mi_seteditmode("nodes")
@@ -151,25 +153,21 @@ for solenoid in solenoid_info:
 min_velocity = math.sqrt((m_ball*(4.5/golf_ball_restitution)**2)/m_plunger)
 
 solenoid_names = []
-fig, axs = plt.subplots(1,3)
+fig, axs = plt.subplots(1,2)
 axs[0].set_xlabel('Time, s')
-axs[0].set_ylabel('Offset, m')
+axs[0].set_ylabel('Force, N')
 axs[1].set_xlabel('Time, s')
-axs[1].set_ylabel('Force, N')
-axs[2].set_xlabel('Time, s')
-axs[2].set_ylabel('Velocity, m/s')
+axs[1].set_ylabel('Velocity, m/s')
 
 for result in solenoid_results:
     solenoid_names.append(result)
     time_list = solenoid_results[result][0]
-    dist_list = solenoid_results[result][1]
     force_list = solenoid_results[result][2]
     vel_list = solenoid_results[result][3]
-    axs[0].plot(time_list,dist_list,label=result)
-    axs[1].plot(time_list,force_list,label=result)
-    axs[2].plot(time_list,vel_list,label=result)
+    axs[0].plot(time_list,force_list,label=result)
+    axs[1].plot(time_list,vel_list,label=result)
 
-axs[2].axhline(y = min_velocity, color = 'r', linestyle = '-')
-
+axs[1].axhline(y = min_velocity, color = 'r', linestyle = '-')
+print(min_velocity)
 plt.legend(solenoid_names)
 plt.show()
