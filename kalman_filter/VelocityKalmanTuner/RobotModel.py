@@ -9,10 +9,7 @@ class RobotModel:
     def __init__(self):
         # FL, BL, BR, FR with X positive
         self.wheel_angles = np.deg2rad([300, 45, 135, 240])
-        # The distance to the origin is different for front and back wheels
-        front_dist = 0.0798
-        back_dist = 0.0837
-        self.wheel_dist = np.array([front_dist, back_dist, back_dist, front_dist])
+        self.wheel_dist = 0.0814
         self.wheel_radius = 0.0247
 
         # Noises
@@ -23,7 +20,7 @@ class RobotModel:
         encoder_sampling_period = 0.01 # s
         self.encoder_noise = encoder_noise_rads/(1/encoder_sampling_period)
 
-        gyro_noise_noise_density = 0.014  # deg/s/√Hz for BMI085 Noise density (typ.)
+        gyro_noise_noise_density = 0.007  # deg/s/√Hz for BMI085 Noise density (typ.)
         # TODO find maximum rotation speed
         # 
         gyro_sampling_freq = 100 # Hz TODO data rate reporting tolerance 
@@ -95,7 +92,7 @@ class RobotModel:
         # https://www.mdpi.com/2076-3417/12/12/5798
         T_body_to_wheel = np.zeros((self.num_inputs, self.num_states))
         for i, angle in enumerate(self.wheel_angles):
-           T_body_to_wheel[i, :] = np.array([np.cos(angle), np.sin(angle), self.wheel_dist[i]])
+           T_body_to_wheel[i, :] = np.array([np.cos(angle), np.sin(angle), -self.wheel_dist])
         T_body_to_wheel /= -self.wheel_radius
 
         return T_body_to_wheel

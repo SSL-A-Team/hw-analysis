@@ -10,16 +10,16 @@ namespace drivetrain_controls {
     }
 
     inline static Eigen::Matrix<double, 3, 4> make_control_matrix() {
-        return (Eigen::Matrix<double, 3, 4>() << 0, 0, 0, 0, 
-                                                 0, 0, 0, 0, 
-                                                 0, 0, 0, 0).finished();
+        return (Eigen::Matrix<double, 3, 4>() << -8.23333e-05, -0.000116437, 0.000116437, 8.23333e-05, 
+                                                 7.85058e-05, -7.85058e-05, -7.85058e-05, 7.85058e-05, 
+                                                 0.000681965, 0.000835234, 0.000835234, 0.000681965).finished();
     }
 
     inline static Eigen::Matrix<double, 5, 3> make_output_matrix() {
-        return (Eigen::Matrix<double, 5, 3>() << 20.4082, 35.348, 3.46939, 
-                                                 20.4082, -35.348, 3.46939, 
-                                                 -28.8615, -28.8615, 3.46939, 
-                                                 -28.8615, 28.8615, 3.46939, 
+        return (Eigen::Matrix<double, 5, 3>() << -20.2429, 35.0618, 3.29555, 
+                                                 -28.6278, -28.6278, 3.29555, 
+                                                 28.6278, -28.6278, 3.29555, 
+                                                 20.2429, 35.0618, 3.29555, 
                                                  0, 0, 1).finished();
     }
 
@@ -38,17 +38,17 @@ namespace drivetrain_controls {
     }
 
     inline static Eigen::Matrix<double, 5, 5> make_observation_noise_matrix() {
-        return (Eigen::Matrix<double, 5, 5>() << 0.118, 0, 0, 0, 0, 
-                                                 0, 0.118, 0, 0, 0, 
-                                                 0, 0, 0.118, 0, 0, 
-                                                 0, 0, 0, 0.118, 0, 
-                                                 0, 0, 0, 0, 0.00244).finished();
+        return (Eigen::Matrix<double, 5, 5>() << 1.18682e-05, 0, 0, 0, 0, 
+                                                 0, 1.18682e-05, 0, 0, 0, 
+                                                 0, 0, 1.18682e-05, 0, 0, 
+                                                 0, 0, 0, 1.18682e-05, 0, 
+                                                 0, 0, 0, 0, 0.00244346).finished();
     }
 
     inline static Eigen::Matrix<double, 3, 5> make_ss_kalman_gain_matrix() {
-        return (Eigen::Matrix<double, 3, 5>() << 0.00357313, 0.00357313, -0.00486448, -0.00486448, 0.00108943, 
-                                                 0.0043247, -0.0043247, -0.0035311, 0.0035311, -2.80598e-19, 
-                                                 0.00425502, 0.00425502, 0.00314511, 0.00314511, 0.0529033).finished();
+        return (Eigen::Matrix<double, 3, 5>() << -0.00823069, -0.0116399, 0.0116399, 0.00823069, 1.57551e-18, 
+                                                 0.00786165, -0.00783362, -0.00783362, 0.00786165, -1.14777e-06, 
+                                                 0.06698, 0.0820302, 0.0820302, 0.06698, 0.00011093).finished();
     }
 
 }
