@@ -8,7 +8,7 @@ class RobotModel:
 
     def __init__(self):
         # FL, BL, BR, FR with X positive
-        self.wheel_angles = np.deg2rad([300, 45, 135, 240])
+        self.wheel_angles = np.deg2rad([330, 45, 135, 210])
         self.wheel_dist = 0.0814
         self.wheel_radius = 0.0247
 
@@ -24,7 +24,7 @@ class RobotModel:
         # TODO find maximum rotation speed
         # 
         gyro_sampling_freq = 100 # Hz TODO data rate reporting tolerance 
-        self.gyro_noise = np.radians(gyro_noise_noise_density) * np.sqrt(gyro_sampling_freq) # in rad/s
+        self.gyro_noise = np.radians(gyro_noise_noise_density) * np.sqrt(gyro_sampling_freq) * 1/10000 # in rad/s
 
         # Dimensions:
         self.num_states = 3 # [v_x, v_y, w_z]
