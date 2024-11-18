@@ -10,7 +10,7 @@ class RobotModel:
         # FL, BL, BR, FR with X positive
         self.wheel_angles = np.deg2rad([330, 45, 135, 210])
         self.wheel_dist = 0.0814
-        self.wheel_radius = 0.0247
+        self.wheel_radius = 0.03
 
         # Noises
         self.init_variance = 0.1 # Diagonal of P matrix is variance at the start of the filter running, which should be small at start
@@ -22,8 +22,8 @@ class RobotModel:
 
         gyro_noise_noise_density = 0.007  # deg/s/√Hz for BMI085 Noise density (typ.)
         # TODO find maximum rotation speed
-        # 
-        gyro_sampling_freq = 100 # Hz TODO data rate reporting tolerance 
+        #
+        gyro_sampling_freq = 100 # Hz TODO data rate reporting tolerance
         self.gyro_noise = np.radians(gyro_noise_noise_density) * np.sqrt(gyro_sampling_freq) * 1/10000 # in rad/s
 
         # Dimensions:
@@ -87,7 +87,7 @@ class RobotModel:
     def get_T_body_to_wheel(self):
         #       ^   Vx
         #       |
-        # Vy <--- 
+        # Vy <---
         #
         # https://www.mdpi.com/2076-3417/12/12/5798
         T_body_to_wheel = np.zeros((self.num_inputs, self.num_states))
@@ -96,11 +96,11 @@ class RobotModel:
         T_body_to_wheel /= -self.wheel_radius
 
         return T_body_to_wheel
-    
+
     def get_T_wheel_to_body(self):
         #       ^   Vx
         #       |
-        # Vy <--- 
+        # Vy <---
         #
         # https://www.mdpi.com/2076-3417/12/12/5798
         T_wheel_to_body = self.get_T_body_to_wheel()
